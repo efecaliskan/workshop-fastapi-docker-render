@@ -1,14 +1,26 @@
-from typing import Optional
-
 from fastapi import FastAPI
+from pydantic import BaseModel
+from app.model.model import predict_pipeline
+from app.model.model import __version__ as model_version
+
 
 app = FastAPI()
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+class TextIn(BaseModel):
+    text: str
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Optional[str] = None):
-    return {"item_id": item_id, "q": q}
+
+class PredictionOut(BaseModel):
+    language: str
+
+
+@app.get("/")
+def home():
+    return {"health_check": "OK", "METU Workshop Rocks": "True", "model_version": model_version}
+
+
+@app.post("/predict", response_model=PredictionOut)
+def predict(payload: TextIn):
+    language = predict_pipeline(payload.text)
+    return {"language": language}
